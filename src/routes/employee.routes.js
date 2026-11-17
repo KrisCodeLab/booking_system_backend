@@ -3,4 +3,4 @@ import { getEmployeesByService } from '../controllers/employee.controller.js'
 
 export const router = new express.Router()
 
-router.get('/employee/:id', getEmployeesByService)
+router.get('/employee/:serviceId', getEmployeesByService)

@@ -35,11 +35,10 @@ CREATE TABLE employee_service (
     
 -- Kunde
 CREATE TABLE customer (
-	id			INT AUTO_INCREMENT PRIMARY KEY,
-	first_name	VARCHAR(80) NOT NULL,
-    last_name	VARCHAR(80) NOT NULL,
-    phone		VARCHAR(80) NOT NULL,
-    mail		VARCHAR(80) NOT NULL UNIQUE
+	id			    INT AUTO_INCREMENT PRIMARY KEY,
+	customer_name	VARCHAR(160) NOT NULL,
+    phone		    VARCHAR(80) NOT NULL,
+    mail		    VARCHAR(80) NOT NULL UNIQUE
 );
 
 -- Terminstatus
@@ -56,7 +55,7 @@ CREATE TABLE appointment (
     employee_id				INT NOT NULL,
     start_date				DATETIME NOT NULL,
     end_date				DATETIME NOT NULL,
-    appointment_status_id	INT NOT NULL,
+    appointment_status_id	INT NOT NULL DEFAULT 1,
     token					VARCHAR(36) NOT NULL UNIQUE,
     
     CONSTRAINT fk_service_appointment
