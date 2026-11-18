@@ -1,4 +1,4 @@
-import { allAppointments, cancelAppointmentWithToken, getAppointment  } from "../services/appointment.service.js"
+import { allAppointments, cancelAppointmentWithToken, getAppointment, getTimeslotsForDay  } from "../services/appointment.service.js"
 
 export async function getAppointments(req, res) {
     try {
@@ -28,6 +28,30 @@ export async function getAppointmentByToken(req, res) {
         res.status(statusCode).json({
             message: statusCode === 500
                 ? "Der Termin konnte nicht geladen werden."
+                : error.message
+        })
+    }
+}
+
+export async function getFreeTimeslots(req, res) {
+    try {
+        const data = {
+            serviceId: req.query.serviceId,
+            employeeId: req.query.employeeId,
+            date: req.query.date
+        }
+        const timeslots = await getTimeslotsForDay(data)
+        res.status(200).json(timeslots)
+    } catch (error) {
+    const statusCode = error.statusCode ?? 500
+
+        if (statusCode === 500) {
+            console.error("Fehler beim Laden der verfügbaren Zeiten:", error)
+        }
+
+        res.status(statusCode).json({
+            message: statusCode === 500
+                ? "Die verfügbaren Termine konnten nicht geladen werden."
                 : error.message
         })
     }

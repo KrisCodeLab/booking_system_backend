@@ -1,0 +1,25 @@
+info:
+  name: getFreeTimeslotsByEmployee
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://127.0.0.1:8080/api/v1/availability?serviceId=1&employeeId=1&date=2026-11-19
+  params:
+    - name: serviceId
+      value: "1"
+      type: query
+    - name: employeeId
+      value: "1"
+      type: query
+    - name: date
+      value: 2026-11-19
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

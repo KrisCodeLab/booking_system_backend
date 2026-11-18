@@ -7,5 +7,6 @@ export const pool = mysql.createPool({
     database: process.env.DB_DATABASE,
     connectionLimit: 10,
     waitForConnections: true,
-    namedPlaceholders: true
+    namedPlaceholders: true,
+    timezone: 'local'
 })

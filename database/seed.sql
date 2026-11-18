@@ -38,7 +38,6 @@ VALUES
 -- Öffnungszeiten anlegen
 INSERT INTO opening_time (weekday, start_time, end_time)
 VALUES
-	('Montag', '09:00', '18:00'),
     ('Dienstag', '09:00', '18:00'),
     ('Mittwoch', '09:00', '18:00'),
     ('Donnerstag', '09:00', '18:00'),
