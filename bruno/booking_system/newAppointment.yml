@@ -1,0 +1,29 @@
+info:
+  name: newAppointment
+  type: http
+
+http:
+  method: POST
+  url: http://127.0.0.1:8080/api/v1/appointment/new
+  body:
+    type: json
+    data: |-
+      [
+        {
+          "service_id": 1,
+          "employee_id": 3,
+          "start_date": "2026-11-20T09:00:00"
+        },
+        {
+          "customer_name": "Peter Lustig",
+          "phone": "040 123654",
+          "mail": "peter.lustig@witzig.de"
+        }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

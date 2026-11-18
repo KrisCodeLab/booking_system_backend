@@ -1,4 +1,4 @@
-import { allAppointments, cancelAppointmentWithToken, getAppointment, getTimeslotsForDay  } from "../services/appointment.service.js"
+import { allAppointments, cancelAppointmentWithToken, getAppointment, getTimeslotsForDay, bookAppointment  } from "../services/appointment.service.js"
 
 export async function getAppointments(req, res) {
     try {
@@ -72,6 +72,25 @@ export async function cancelAppointment(req, res) {
         res.status(statusCode).json({
             message: statusCode === 500
                 ? "Der Termin konnte nicht storniert werden."
+                : error.message
+        })
+    }
+}
+
+export async function newAppointment(req, res) {
+    try {
+        const result = await bookAppointment(req.body)
+        res.status(201).json(result)
+    } catch (error) {
+        const statusCode = error.statusCode ?? 500
+
+        if (statusCode === 500) {
+            console.error("Fehler beim Buchen des Termins:", error)
+        }
+
+        res.status(statusCode).json({
+            message: statusCode === 500
+                ? "Der Termin konnte nicht gebucht werden."
                 : error.message
         })
     }

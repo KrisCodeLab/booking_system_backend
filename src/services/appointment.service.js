@@ -1,4 +1,13 @@
-import { getAllAppointments, cancelAppointment, getAppointmentByToken, openingTimes, getAllAppointmentsByDayAndService } from "../repositories/appointment.repository.js"
+import { 
+    getAllAppointments, 
+    cancelAppointment, 
+    getAppointmentByToken, 
+    openingTimes, 
+    getAllAppointmentsByDayAndService, 
+    createNewAppointment, 
+    createNewAppointmentAndCustomer 
+} from "../repositories/appointment.repository.js"
+import { getCustomerByMail } from "../repositories/customer.repository.js"
 import { getServiceById } from "../repositories/service.repository.js"
 
 
@@ -26,6 +35,19 @@ async function getOpeningTimes(date) {
 
 export async function getTimeslotsForDay(data) {
     const timeslots = []
+
+    const requestedDate = new Date(`${data.date}T00:00:00`)
+    const currentDate = new Date()
+    currentDate.setSeconds(0, 0)
+
+    const limit = new Date(currentDate)
+    limit.setMonth(limit.getMonth() + 3)
+    if (limit.getDate() !== currentDate.getDate()) limit.setDate(0)
+    limit.setHours(0, 0, 0, 0)
+
+    if (requestedDate > limit) {
+        return { message: "Termine sind höchstens drei Monate im Voraus buchbar." }
+}
     const openingTimes = await getOpeningTimes(data.date)
     if (!openingTimes) return { message: "Salon geschlossen, keine verfügbaren Termine." }
 
@@ -34,10 +56,8 @@ export async function getTimeslotsForDay(data) {
 
     const opening = new Date(`${data.date}T${openingTimes.start_time}`)
     const closing = new Date(`${data.date}T${openingTimes.end_time}`)
-    const now = new Date()
-    now.setSeconds(0, 0)
-
-    const nowMinutesRemainder = now.getMinutes() % 15
+    
+    const nowMinutesRemainder = currentDate.getMinutes() % 15
 
     const duration = service.duration * 60 * 1000
     const leadTime = 120 * 60 * 1000
@@ -45,12 +65,12 @@ export async function getTimeslotsForDay(data) {
 
     let earliestStart
 
-    if (opening.getTime() < now.getTime() + leadTime) {
+    if (opening.getTime() < currentDate.getTime() + leadTime) {
         if (nowMinutesRemainder === 0) {
-            earliestStart = now.getTime() + leadTime
+            earliestStart = currentDate.getTime() + leadTime
         } else {
-            now.setMinutes(now.getMinutes() + 15 - nowMinutesRemainder)
-            earliestStart = now.getTime() + leadTime
+            currentDate.setMinutes(currentDate.getMinutes() + 15 - nowMinutesRemainder)
+            earliestStart = currentDate.getTime() + leadTime
         } 
     } else {
         earliestStart = opening.getTime()
@@ -63,9 +83,9 @@ export async function getTimeslotsForDay(data) {
         let slotAvailable = true
 
         if (data.employeeId) {
-            slotAvailable = checkEmployeesAvailability(appointments, slot, duration)
+            slotAvailable = await checkEmployeesAvailability(appointments, slot, duration)
         } else {
-            slotAvailable = checkSlotAvailability(appointments, slot, duration)
+            slotAvailable = Boolean(await checkFreeEmployeeForSlot(appointments, slot, duration))
         }
 
 
@@ -88,6 +108,7 @@ export async function cancelAppointmentWithToken(token) {
     const appointment = await getAppointment(token)
     const appointmentStart = new Date(appointment.start_date)
     const cancellationDeadline = appointmentStart.getTime() - 24 * 60 * 60 * 1000
+    
 
     if (appointment.appointment_status_id === 4) 
         return { message: "Ihr Termin wurde bereits storniert." }
@@ -104,7 +125,7 @@ export async function cancelAppointmentWithToken(token) {
     return { message: "Ihr Termin wurde storniert." }
 }
 
-function checkEmployeesAvailability (appointments, slot, duration){
+async function checkEmployeesAvailability (appointments, slot, duration){
     let slotAvailable = true
     for (const appointment of appointments) {
         if (
@@ -118,8 +139,7 @@ function checkEmployeesAvailability (appointments, slot, duration){
     return slotAvailable
 }
 
-function checkSlotAvailability (appointments, slot, duration) {
-    let slotAvailable = false
+async function checkFreeEmployeeForSlot (appointments, slot, duration) {
     const employeeIds = []
 
     for (const appointment of appointments) {
@@ -150,9 +170,39 @@ function checkSlotAvailability (appointments, slot, duration) {
         }
 
         if (employeeAvailable) {
-            slotAvailable = true
-            break
+            return employeeId
         }
     }
-    return slotAvailable
+}
+
+export async function bookAppointment(data) {
+    const [appointmentData, customerData] = data
+    const service = await getServiceById(appointmentData.service_id)
+    const appointments = await getAllAppointmentsByDayAndService({
+        employeeId: appointmentData.employee_id,
+        date: appointmentData.start_date.split("T")[0]
+    })
+
+    const duration = service.duration * 60 * 1000
+
+    const slotAvailable = await checkEmployeesAvailability(appointments, new Date(appointmentData.start_date).getTime(), duration)
+    const customer = await getCustomerByMail(customerData.mail)
+    const endDateinMs = new Date(appointmentData.start_date).getTime() + duration
+    appointmentData.end_date = new Date(endDateinMs)
+    appointmentData.token = crypto.randomUUID()
+
+    if (slotAvailable) {
+        if (!customer) {
+            await createNewAppointmentAndCustomer(appointmentData, customerData)
+            return { message: "Ihr Termin wurde gebucht." }
+        } else {
+            appointmentData.customer_id = customer.id
+            await createNewAppointment(appointmentData)
+            return { message: "Ihr Termin wurde gebucht." }
+        }
+    } else {
+        const error = new Error("Da war jemand anderes schneller, bitte wählen Sie einen neuen Termin.")
+        error.statusCode = 409
+        throw error
+    }
 }

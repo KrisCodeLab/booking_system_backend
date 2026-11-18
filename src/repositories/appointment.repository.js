@@ -48,3 +48,52 @@ export async function cancelAppointment(token) {
     const [rows] = await pool.execute('UPDATE appointment SET appointment_status_id = 4 WHERE token = ?', [token])
     return rows
 }
+
+export async function createNewAppointment(appointmentData) {
+    const [rows] = await pool.execute(
+        `INSERT INTO appointment (service_id, customer_id, employee_id, start_date, end_date, token)
+        VALUES(?, ?, ?, ?, ?, ?)`,
+        [
+            appointmentData.service_id, 
+            appointmentData.customer_id, 
+            appointmentData.employee_id, 
+            appointmentData.start_date, 
+            appointmentData.end_date, 
+            appointmentData.token
+        ]
+    )
+}
+
+export async function createNewAppointmentAndCustomer(appointmentData, customerData) {
+    const conn = await pool.getConnection()
+    
+    try {
+        await conn.beginTransaction()
+
+        const [customerRes] = await conn.execute(
+            `INSERT INTO customer (customer_name, phone, mail)
+            VALUES (:customer_name, :phone, :mail)`,
+            customerData
+        )
+
+        appointmentData.customer_id = customerRes.insertId
+    
+        const [appointmentRes] = await conn.execute(
+            `INSERT INTO appointment (service_id, customer_id, employee_id, start_date, end_date, token)
+            VALUES(:service_id, :customer_id, :employee_id, :start_date, :end_date, :token)`,
+            appointmentData
+        )
+
+        await conn.commit()
+
+        return {appointmentRes, customerRes}
+
+    } catch (error) {
+
+        await conn.rollback()
+        throw error
+
+    } finally {
+        conn.release()
+    }
+}
