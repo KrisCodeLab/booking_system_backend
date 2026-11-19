@@ -1,5 +1,10 @@
 import { pool } from "../config/db.js"
 
+export async function getEmployeeById(id) {
+    const [rows] = await pool.execute('SELECT id, employee_name FROM employee WHERE id = ?', [id])
+    return rows[0]
+}
+
 export async function getEmployeesByServiceId(id) {
     
     const sql = `SELECT e.id, e.employee_name

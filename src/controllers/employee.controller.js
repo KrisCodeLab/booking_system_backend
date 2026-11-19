@@ -1,4 +1,4 @@
-import { employeesByServiceId } from "../services/employee.service.js"
+import { employeesByServiceId, employeeById } from "../services/employee.service.js"
 
 
 export async function getEmployeesByService(req, res) {
@@ -11,6 +11,20 @@ export async function getEmployeesByService(req, res) {
 
         res.status(500).json({
             message: "Die Mitarbeiter konnten nicht geladen werden."
+        })
+    }
+}
+
+export async function getEmployeeById(req, res) {
+    try {
+        const id = req.params.id
+        const employee = await employeeById(id)
+        res.status(200).json(employee)
+    } catch (error) {
+        console.error("Fehler beim Laden des Mitarbeiters:", error)
+
+        res.status(500).json({
+            message: "Der Mitarbeiter konnte nicht geladen werden."
         })
     }
 }
