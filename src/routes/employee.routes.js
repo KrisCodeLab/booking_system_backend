@@ -3,4 +3,6 @@ import { getEmployeesByService } from '../controllers/employee.controller.js'
 
 export const router = new express.Router()
 
-router.get('/employee/:serviceId', getEmployeesByService)
+router.get('/employee/:service_id', getEmployeesByService)
+
+// TODO: Route für employee - service zuordnung anlegen

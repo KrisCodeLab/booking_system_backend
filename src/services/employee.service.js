@@ -1,6 +1,6 @@
-import { getEmployeesByServiceID } from "../repositories/employee.repository.js"
+import { getEmployeesByServiceId } from "../repositories/employee.repository.js"
 
-export async function employeesByServiceID(id){
-    const employee = await getEmployeesByServiceID(id)
+export async function employeesByServiceId(id){
+    const employee = await getEmployeesByServiceId(id)
     return employee
 }

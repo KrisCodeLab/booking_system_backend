@@ -1,0 +1,22 @@
+info:
+  name: createNewService
+  type: http
+
+http:
+  method: POST
+  url: http://127.0.0.1:8080/api/v1/services/new
+  body:
+    type: json
+    data: |-
+      {
+        "service_name": "Augenbrauen zupfen",
+        "price":  "1000",
+        "duration": 10
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -16,7 +16,7 @@ export async function openingTimes(day) {
 }
 
 export async function getAllAppointmentsByDayAndService(data) {
-    if (data.employeeId === undefined) {
+    if (data.employee_id === undefined) {
         const [rows] = await pool.execute(`
             SELECT e.id AS employee_id, a.start_date, a.end_date
             FROM employee AS e
@@ -28,7 +28,7 @@ export async function getAllAppointmentsByDayAndService(data) {
             WHERE es.service_id = ?
                 AND e.is_active = TRUE
             ORDER BY e.id, a.start_date`, 
-            [data.date, data.serviceId])
+            [data.date, data.service_id])
         return rows
     } else {
         const [rows] = await pool.execute(`
@@ -39,29 +39,29 @@ export async function getAllAppointmentsByDayAndService(data) {
                 AND appointment_status_id <> 4
             ORDER BY start_date;
             `, 
-            [data.employeeId, data.date])
+            [data.employee_id, data.date])
         return rows
     }
 }
 
-export async function cancelAppointment(token) {
-    const [rows] = await pool.execute('UPDATE appointment SET appointment_status_id = 4 WHERE token = ?', [token])
-    return rows
+export async function updateAppointmentStatus(token, id, status) {
+    if(token) {
+        const [rows] = await pool.execute('UPDATE appointment SET appointment_status_id = 4 WHERE token = ?', [token])
+        return rows
+    } else {
+        const [rows] = await pool.execute('UPDATE appointment SET appointment_status_id = ? WHERE id = ?', [status, id])
+        return rows
+    }
 }
 
 export async function createNewAppointment(appointmentData) {
-    const [rows] = await pool.execute(
+    const [result] = await pool.execute(
         `INSERT INTO appointment (service_id, customer_id, employee_id, start_date, end_date, token)
-        VALUES(?, ?, ?, ?, ?, ?)`,
-        [
-            appointmentData.service_id, 
-            appointmentData.customer_id, 
-            appointmentData.employee_id, 
-            appointmentData.start_date, 
-            appointmentData.end_date, 
-            appointmentData.token
-        ]
+        VALUES(:service_id, :customer_id, :employee_id, :start_date, :end_date, :token)`,
+        appointmentData
     )
+
+    return result
 }
 
 export async function createNewAppointmentAndCustomer(appointmentData, customerData) {

@@ -1,4 +1,4 @@
-import { allAppointments, cancelAppointmentWithToken, getAppointment, getTimeslotsForDay, bookAppointment  } from "../services/appointment.service.js"
+import { allAppointments, cancelAppointmentWithToken, updateAppointmentById, getAppointment, getTimeslotsForDay, bookAppointment  } from "../services/appointment.service.js"
 
 export async function getAppointments(req, res) {
     try {
@@ -36,8 +36,8 @@ export async function getAppointmentByToken(req, res) {
 export async function getFreeTimeslots(req, res) {
     try {
         const data = {
-            serviceId: req.query.serviceId,
-            employeeId: req.query.employeeId,
+            service_id: req.query.service_id,
+            employee_id: req.query.employee_id,
             date: req.query.date
         }
         const timeslots = await getTimeslotsForDay(data)
@@ -57,7 +57,7 @@ export async function getFreeTimeslots(req, res) {
     }
 }
 
-export async function cancelAppointment(req, res) {
+export async function cancelAppointmentByToken(req, res) {
     try {
         const token = req.params.token
         const result = await cancelAppointmentWithToken(token)
@@ -72,6 +72,30 @@ export async function cancelAppointment(req, res) {
         res.status(statusCode).json({
             message: statusCode === 500
                 ? "Der Termin konnte nicht storniert werden."
+                : error.message
+        })
+    }
+}
+
+export async function updateAppointmentStatus(req, res) {
+    try {
+        const ids = {
+            "id": req.params.id,
+            "status": req.params.status
+        }
+
+        const result = await updateAppointmentById(ids)
+        res.json(result)
+    } catch (error) {
+        const statusCode = error.statusCode ?? 500
+
+        if (statusCode === 500) {
+            console.error("Fehler beim ändern des Termins:", error)
+        }
+
+        res.status(statusCode).json({
+            message: statusCode === 500
+                ? "Der Termin konnte nicht geändert werden."
                 : error.message
         })
     }

@@ -1,6 +1,6 @@
 import { 
     getAllAppointments, 
-    cancelAppointment, 
+    updateAppointmentStatus, 
     getAppointmentByToken, 
     openingTimes, 
     getAllAppointmentsByDayAndService, 
@@ -47,11 +47,12 @@ export async function getTimeslotsForDay(data) {
 
     if (requestedDate > limit) {
         return { message: "Termine sind höchstens drei Monate im Voraus buchbar." }
-}
+    }
+    
     const openingTimes = await getOpeningTimes(data.date)
     if (!openingTimes) return { message: "Salon geschlossen, keine verfügbaren Termine." }
 
-    const service = await getServiceById(data.serviceId)
+    const service = await getServiceById(data.service_id)
     const appointments = await getAllAppointmentsByDayAndService(data)
 
     const opening = new Date(`${data.date}T${openingTimes.start_time}`)
@@ -81,11 +82,13 @@ export async function getTimeslotsForDay(data) {
     
     for (let slot = earliestStart; slot <= latestStart; slot += interval) {
         let slotAvailable = true
+        let employeeId = data.employee_id
 
-        if (data.employeeId) {
+        if (employeeId) {
             slotAvailable = await checkEmployeesAvailability(appointments, slot, duration)
         } else {
-            slotAvailable = Boolean(await checkFreeEmployeeForSlot(appointments, slot, duration))
+            employeeId = await checkFreeEmployeeForSlot(appointments, slot, duration)
+            slotAvailable = employeeId !== undefined
         }
 
 
@@ -94,7 +97,7 @@ export async function getTimeslotsForDay(data) {
                 hour: "2-digit",
                 minute: "2-digit"
             })
-            timeslots.push(time)
+            timeslots.push({ time, employee_id: employeeId })
         }
     }
 
@@ -121,8 +124,21 @@ export async function cancelAppointmentWithToken(token) {
         throw error
     }
    
-    await cancelAppointment(token)
+    await updateAppointmentStatus(token)
     return { message: "Ihr Termin wurde storniert." }
+}
+
+export async function updateAppointmentById(id) { 
+    //TODO: Zugriffsbeschränkung einbauen
+    const result = await updateAppointmentStatus(undefined, id.id, id.status)
+
+    if (result.affectedRows === 0) {
+        const error = new Error("Der Termin existiert nicht.")
+        error.statusCode = 404
+        throw error
+    }
+
+    return { message: "Der Terminstatus wurde geändert." }
 }
 
 async function checkEmployeesAvailability (appointments, slot, duration){
@@ -179,7 +195,7 @@ export async function bookAppointment(data) {
     const [appointmentData, customerData] = data
     const service = await getServiceById(appointmentData.service_id)
     const appointments = await getAllAppointmentsByDayAndService({
-        employeeId: appointmentData.employee_id,
+        employee_id: appointmentData.employee_id,
         date: appointmentData.start_date.split("T")[0]
     })
 
@@ -187,18 +203,24 @@ export async function bookAppointment(data) {
 
     const slotAvailable = await checkEmployeesAvailability(appointments, new Date(appointmentData.start_date).getTime(), duration)
     const customer = await getCustomerByMail(customerData.mail)
-    const endDateinMs = new Date(appointmentData.start_date).getTime() + duration
-    appointmentData.end_date = new Date(endDateinMs)
+    const endDateInMs = new Date(appointmentData.start_date).getTime() + duration
+    appointmentData.end_date = new Date(endDateInMs)
     appointmentData.token = crypto.randomUUID()
 
     if (slotAvailable) {
         if (!customer) {
             await createNewAppointmentAndCustomer(appointmentData, customerData)
-            return { message: "Ihr Termin wurde gebucht." }
+            return { 
+                message: "Ihr Termin wurde gebucht.",
+                token: appointmentData.token
+            }
         } else {
             appointmentData.customer_id = customer.id
             await createNewAppointment(appointmentData)
-            return { message: "Ihr Termin wurde gebucht." }
+            return { 
+                message: "Ihr Termin wurde gebucht.",
+                token: appointmentData.token
+            }
         }
     } else {
         const error = new Error("Da war jemand anderes schneller, bitte wählen Sie einen neuen Termin.")

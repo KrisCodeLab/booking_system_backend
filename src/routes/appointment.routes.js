@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAppointments, cancelAppointment, getAppointmentByToken, getFreeTimeslots, newAppointment } from '../controllers/appointment.controller.js'
+import { getAppointments, cancelAppointmentByToken, updateAppointmentStatus, getAppointmentByToken, getFreeTimeslots, newAppointment } from '../controllers/appointment.controller.js'
 
 export const router = new express.Router()
 
@@ -9,4 +9,5 @@ router.get('/availability', getFreeTimeslots)
 
 router.post('/appointment/new', newAppointment)
 
-router.patch('/appointment/:token', cancelAppointment)
+router.patch('/appointment/cancel/:token', cancelAppointmentByToken)
+router.patch('/appointment/status/:id/:status', updateAppointmentStatus)

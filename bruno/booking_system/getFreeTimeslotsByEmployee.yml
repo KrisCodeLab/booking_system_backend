@@ -5,12 +5,12 @@ info:
 
 http:
   method: GET
-  url: http://127.0.0.1:8080/api/v1/availability?serviceId=1&employeeId=1&date=2026-11-19
+  url: http://127.0.0.1:8080/api/v1/availability?service_id=1&employee_id=1&date=2026-11-19
   params:
-    - name: serviceId
+    - name: service_id
       value: "1"
       type: query
-    - name: employeeId
+    - name: employee_id
       value: "1"
       type: query
     - name: date

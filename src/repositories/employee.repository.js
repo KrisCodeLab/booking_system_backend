@@ -1,6 +1,6 @@
 import { pool } from "../config/db.js"
 
-export async function getEmployeesByServiceID(id) {
+export async function getEmployeesByServiceId(id) {
     
     const sql = `SELECT e.id, e.employee_name
             FROM employee AS e
