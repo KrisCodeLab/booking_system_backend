@@ -6,7 +6,17 @@ export async function getAllAppointments() {
 }
 
 export async function getAppointmentByToken(token) {
-    const [rows] = await pool.execute('SELECT * FROM appointment WHERE token = ?', [token])
+    const [rows] = await pool.execute(`SELECT a.id, a.service_id, a.employee_id, a.customer_id,
+            DATE_FORMAT(a.start_date, '%Y-%m-%dT%H:%i:%s') AS start_date,
+            DATE_FORMAT(a.end_date, '%Y-%m-%dT%H:%i:%s') AS end_date,
+            a.appointment_status_id, a.token,
+            s.service_name, s.duration, s.price,
+            e.employee_name, c.customer_name
+        FROM appointment AS a
+        JOIN service AS s ON s.id = a.service_id
+        JOIN employee AS e ON e.id = a.employee_id
+        JOIN customer AS c ON c.id = a.customer_id
+        WHERE a.token = ?`, [token])
     return rows
 }
 

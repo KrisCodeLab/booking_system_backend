@@ -210,16 +210,18 @@ export async function bookAppointment(data) {
     if (slotAvailable) {
         if (!customer) {
             await createNewAppointmentAndCustomer(appointmentData, customerData)
-            return { 
+            return {
                 message: "Ihr Termin wurde gebucht.",
-                token: appointmentData.token
+                token: appointmentData.token,
+                appointment: await getAppointment(appointmentData.token)
             }
         } else {
             appointmentData.customer_id = customer.id
             await createNewAppointment(appointmentData)
-            return { 
+            return {
                 message: "Ihr Termin wurde gebucht.",
-                token: appointmentData.token
+                token: appointmentData.token,
+                appointment: await getAppointment(appointmentData.token)
             }
         }
     } else {
