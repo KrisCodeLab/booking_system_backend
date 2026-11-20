@@ -1,7 +1,14 @@
 import { pool } from "../config/db.js"
 
-export async function getAllAppointments() {
-    const [rows] = await pool.execute('SELECT * FROM appointment')
+export async function getAllAppointments(date) {
+    const [rows] = await pool.execute(`
+        SELECT a.*, c.customer_name, e.employee_name, s.service_name
+        FROM appointment AS a
+        JOIN customer AS c ON c.id = a.customer_id
+        JOIN employee AS e ON e.id = a.employee_id
+        JOIN service AS s ON s.id = a.service_id
+        WHERE DATE(a.start_date) = ?
+        ORDER BY a.start_date`, [date])
     return rows
 }
 

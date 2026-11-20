@@ -2,7 +2,7 @@ import { allAppointments, cancelAppointmentWithToken, updateAppointmentById, get
 
 export async function getAppointments(req, res) {
     try {
-        const appointments = await allAppointments()
+        const appointments = await allAppointments(req.query.date)
         res.status(200).json(appointments)
     } catch (error) {
         console.error("Fehler beim Laden der Termine:", error)

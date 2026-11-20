@@ -3,7 +3,7 @@ import { getAppointments, cancelAppointmentByToken, updateAppointmentStatus, get
 
 export const router = new express.Router()
 
-router.get('/appointments', getAppointments) // TODO: Route anpassen -> gibt aktuell auch Tokens und andere Daten aus! 
+router.get('/appointments', getAppointments)
 router.get('/appointment/:token', getAppointmentByToken)
 router.get('/availability', getFreeTimeslots)
 

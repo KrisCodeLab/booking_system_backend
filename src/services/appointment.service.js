@@ -11,8 +11,8 @@ import { getCustomerByMail } from "../repositories/customer.repository.js"
 import { getServiceById } from "../repositories/service.repository.js"
 
 
-export async function allAppointments() {
-    const appointments = await getAllAppointments()
+export async function allAppointments(date) {
+    const appointments = await getAllAppointments(date)
     return appointments
 }
 
